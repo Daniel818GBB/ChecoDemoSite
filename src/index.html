@@ -11,6 +11,8 @@
   <title>AI Assistant - Chat Interface</title>
   <!-- Bot Framework WebChat -->
   <script crossorigin="anonymous" src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+  <!-- Microsoft Cognitive Services Speech SDK -->
+  <script src="https://aka.ms/csspeech/jsbundle"></script>
 </head>
 
 <body>
@@ -59,7 +61,21 @@
           <h2 class="chat-title">AI Assistant</h2>
           <p class="chat-subtitle">Intelligent conversation at your service</p>
         </div>
+        <div class="header-actions">
+          <button class="mic-button" id="mic-toggle" title="Speak to chat" aria-label="Toggle microphone">
+            <i class="fas fa-microphone"></i>
+          </button>
+        </div>
         <div class="header-badge">CHAT EDITION</div>
+      </div>
+
+      <!-- Speech Recognition Display -->
+      <div class="speech-display" id="speech-display" style="display: none;">
+        <div class="speech-content">
+          <i class="fas fa-microphone-slash"></i>
+          <span id="speech-text">Listening...</span>
+          <button class="speech-cancel" id="speech-cancel">Cancel</button>
+        </div>
       </div>
 
       <div class="chat-welcome" id="chat-welcome">

@@ -8,11 +8,17 @@ const startChatBtn = document.getElementById('start-chat');
 const learnMoreBtn = document.getElementById('learn-more');
 const welcomeScreen = document.getElementById('chat-welcome');
 const webchatArea = document.querySelector('.webchat-area');
+const micToggle = document.getElementById('mic-toggle');
+const speechDisplay = document.getElementById('speech-display');
+const speechText = document.getElementById('speech-text');
+const speechCancel = document.getElementById('speech-cancel');
 
 // Current state
 let currentScenario = null;
 let pendingScroll = false;
 let isUserTurn = false;
+let isListening = false;
+let recognizer = null;
 
 // Sidebar toggle functionality
 menuToggle.addEventListener('click', () => {
@@ -49,6 +55,19 @@ startChatBtn.addEventListener('click', () => {
 
 learnMoreBtn.addEventListener('click', () => {
   alert('AI Assistant provides intelligent conversations with scenario-based interactions. Choose a scenario from the left sidebar to get started!');
+});
+
+// Microphone and Speech Recognition
+micToggle.addEventListener('click', () => {
+  if (!isListening) {
+    startSpeechRecognition();
+  } else {
+    stopSpeechRecognition();
+  }
+});
+
+speechCancel.addEventListener('click', () => {
+  stopSpeechRecognition();
 });
 
 // Show chat function
@@ -252,4 +271,134 @@ function performOptimizedScroll() {
   const scrollPosition = userQuestion.offsetTop - 10;
    
   transcriptElement.scrollTop = scrollPosition;
+}
+
+// Speech Recognition Functions
+function initializeWebSpeechAPI() {
+  // Use Web Speech API if available (works without Azure credentials)
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    console.warn('Web Speech API not available in this browser');
+    micToggle.style.display = 'none';
+    return null;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    isListening = true;
+    micToggle.classList.add('active');
+    speechDisplay.style.display = 'flex';
+    speechText.textContent = 'Listening...';
+  };
+
+  recognition.onresult = (event) => {
+    let interimTranscript = '';
+    let finalTranscript = '';
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript + ' ';
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    // Update display with interim results
+    const displayText = finalTranscript || interimTranscript || 'Listening...';
+    speechText.textContent = displayText;
+
+    // If final result, send to chat
+    if (finalTranscript) {
+      sendSpeechToChat(finalTranscript.trim());
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    speechText.textContent = 'Error: ' + event.error;
+    setTimeout(() => {
+      stopSpeechRecognition();
+    }, 2000);
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    micToggle.classList.remove('active');
+    setTimeout(() => {
+      speechDisplay.style.display = 'none';
+    }, 1000);
+  };
+
+  return recognition;
+}
+
+function startSpeechRecognition() {
+  if (!recognizer) {
+    recognizer = initializeWebSpeechAPI();
+  }
+
+  if (recognizer && !isListening) {
+    try {
+      recognizer.start();
+      showChat();
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+    }
+  }
+}
+
+function stopSpeechRecognition() {
+  if (recognizer && isListening) {
+    try {
+      recognizer.stop();
+    } catch (error) {
+      console.error('Error stopping speech recognition:', error);
+    }
+  }
+}
+
+function sendSpeechToChat(text) {
+  // Find the WebChat send button and input field
+  const sendButton = document.querySelector('[aria-label="Send"]') || 
+                     document.querySelector('button[aria-label*="Send"]') ||
+                     document.querySelector('[role="button"][aria-label*="send"]');
+  
+  const inputBox = document.querySelector('input[type="text"]') ||
+                   document.querySelector('[contenteditable="true"]') ||
+                   document.querySelector('.webchat__textbox__input');
+
+  if (inputBox) {
+    // Set the input value
+    if (inputBox.contentEditable === 'true') {
+      inputBox.textContent = text;
+    } else {
+      inputBox.value = text;
+      inputBox.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Trigger send button click after a short delay
+    setTimeout(() => {
+      if (sendButton) {
+        sendButton.click();
+      } else {
+        // Try pressing Enter as fallback
+        inputBox.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          keyCode: 13,
+          which: 13,
+          bubbles: true
+        }));
+      }
+    }, 100);
+
+    stopSpeechRecognition();
+  }
 }
