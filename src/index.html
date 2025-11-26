@@ -13,6 +13,8 @@
   <script crossorigin="anonymous" src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
   <!-- Microsoft Cognitive Services Speech SDK -->
   <script src="https://aka.ms/csspeech/jsbundle"></script>
+  <!-- Configuration -->
+  <script src="config.js"></script>
 </head>
 
 <body>
@@ -65,6 +67,9 @@
           <button class="mic-button" id="mic-toggle" title="Speak to chat" aria-label="Toggle microphone">
             <i class="fas fa-microphone"></i>
           </button>
+          <button class="tts-button" id="tts-toggle" title="Enable voice responses" aria-label="Toggle text-to-speech">
+            <i class="fas fa-volume-up"></i>
+          </button>
         </div>
         <div class="header-badge">CHAT EDITION</div>
       </div>
@@ -75,6 +80,15 @@
           <i class="fas fa-microphone-slash"></i>
           <span id="speech-text">Listening...</span>
           <button class="speech-cancel" id="speech-cancel">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Text-to-Speech Display -->
+      <div class="tts-display" id="tts-display" style="display: none;">
+        <div class="tts-content">
+          <i class="fas fa-volume-up"></i>
+          <span id="tts-text">Speaking...</span>
+          <button class="tts-stop" id="tts-stop">Stop</button>
         </div>
       </div>
 

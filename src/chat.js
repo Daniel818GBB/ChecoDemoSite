@@ -12,6 +12,10 @@ const micToggle = document.getElementById('mic-toggle');
 const speechDisplay = document.getElementById('speech-display');
 const speechText = document.getElementById('speech-text');
 const speechCancel = document.getElementById('speech-cancel');
+const ttsToggle = document.getElementById('tts-toggle');
+const ttsDisplay = document.getElementById('tts-display');
+const ttsText = document.getElementById('tts-text');
+const ttsStop = document.getElementById('tts-stop');
 
 // Current state
 let currentScenario = null;
@@ -19,6 +23,14 @@ let pendingScroll = false;
 let isUserTurn = false;
 let isListening = false;
 let recognizer = null;
+let ttsEnabled = false;
+let isPlayingAudio = false;
+
+// Azure Speech Configuration
+const AZURE_CONFIG = {
+  key: window.AZURE_SPEECH_KEY || '',
+  region: window.AZURE_SPEECH_REGION || 'eastus'
+};
 
 // Sidebar toggle functionality
 menuToggle.addEventListener('click', () => {
@@ -70,7 +82,17 @@ speechCancel.addEventListener('click', () => {
   stopSpeechRecognition();
 });
 
-// Show chat function
+// Text-to-Speech Toggle
+ttsToggle.addEventListener('click', () => {
+  ttsEnabled = !ttsEnabled;
+  ttsToggle.classList.toggle('active', ttsEnabled);
+  console.log('TTS', ttsEnabled ? 'enabled' : 'disabled');
+});
+
+ttsStop.addEventListener('click', () => {
+  stopAudio();
+});
+
 function showChat() {
   welcomeScreen.classList.add('hidden');
   webchatArea.classList.add('active');
@@ -204,6 +226,7 @@ function startWebChat() {
 
       setTimeout(() => {
         setupScrollingObserver();
+        setupBotMessageListener();
       }, 1000);
     } catch (error) {
       console.error('Failed to initialize WebChat:', error);
@@ -384,5 +407,110 @@ function sendSpeechToChat(text) {
   } else {
     console.warn('DirectLine not available or empty text');
     stopSpeechRecognition();
+  }
+}
+
+// Azure Text-to-Speech Functions
+async function synthesizeSpeech(text) {
+  if (!ttsEnabled || isPlayingAudio || !text.trim()) {
+    return;
+  }
+
+  try {
+    isPlayingAudio = true;
+    ttsDisplay.style.display = 'flex';
+    ttsText.textContent = 'Generating speech...';
+
+    const url = `https://${AZURE_CONFIG.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+    
+    const ssml = `<speak version='1.0' xml:lang='en-US'>
+      <voice name='en-US-AriaNeural'>
+        <prosody rate='1.0' pitch='0%'>
+          ${escapeXml(text)}
+        </prosody>
+      </voice>
+    </speak>`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': AZURE_CONFIG.key,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3'
+      },
+      body: ssml
+    });
+
+    if (!response.ok) {
+      throw new Error(`Azure TTS error: ${response.statusText}`);
+    }
+
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    
+    playAudio(audioUrl, text);
+  } catch (error) {
+    console.error('Error synthesizing speech:', error);
+    ttsText.textContent = 'Error generating speech';
+    setTimeout(() => {
+      ttsDisplay.style.display = 'none';
+      isPlayingAudio = false;
+    }, 2000);
+  }
+}
+
+function playAudio(audioUrl, text) {
+  const audio = new Audio(audioUrl);
+  
+  ttsText.textContent = 'Playing: ' + text.substring(0, 50) + (text.length > 50 ? '...' : '');
+
+  audio.addEventListener('ended', () => {
+    stopAudio();
+  });
+
+  audio.addEventListener('error', (error) => {
+    console.error('Audio playback error:', error);
+    stopAudio();
+  });
+
+  audio.play().catch((error) => {
+    console.error('Error playing audio:', error);
+    stopAudio();
+  });
+
+  window.currentAudio = audio;
+}
+
+function stopAudio() {
+  if (window.currentAudio) {
+    window.currentAudio.pause();
+    window.currentAudio = null;
+  }
+  ttsDisplay.style.display = 'none';
+  isPlayingAudio = false;
+}
+
+function escapeXml(unsafe) {
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+    }
+  });
+}
+
+// Monitor incoming bot messages and speak them
+function setupBotMessageListener() {
+  if (window.chatDirectLine) {
+    window.chatDirectLine.activity$.subscribe((activity) => {
+      if (activity.type === 'message' && activity.from.role === 'bot' && ttsEnabled) {
+        if (activity.text) {
+          synthesizeSpeech(activity.text);
+        }
+      }
+    });
   }
 }
