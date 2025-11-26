@@ -26,10 +26,12 @@ let recognizer = null;
 let ttsEnabled = false;
 let isPlayingAudio = false;
 
-// Azure Speech Configuration
-const AZURE_CONFIG = {
-  key: window.AZURE_SPEECH_KEY || '',
-  region: window.AZURE_SPEECH_REGION || 'eastus'
+// Azure Speech Configuration - lazy load from window
+const getAzureConfig = () => {
+  return {
+    key: window.AZURE_SPEECH_KEY || '',
+    region: window.AZURE_SPEECH_REGION || 'eastus'
+  };
 };
 
 // Sidebar toggle functionality
@@ -417,7 +419,8 @@ async function synthesizeSpeech(text) {
   }
 
   // Check if API key is configured
-  if (!AZURE_CONFIG.key) {
+  const config = getAzureConfig();
+  if (!config.key) {
     console.warn('Azure Speech API key not configured. Please set AZURE_SPEECH_KEY.');
     ttsDisplay.style.display = 'flex';
     ttsText.textContent = 'Speech service not configured';
@@ -432,7 +435,7 @@ async function synthesizeSpeech(text) {
     ttsDisplay.style.display = 'flex';
     ttsText.textContent = 'Generating speech...';
 
-    const url = `https://${AZURE_CONFIG.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+    const url = `https://${config.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
     
     const ssml = `<speak version='1.0' xml:lang='en-US'>
       <voice name='en-US-AriaNeural'>
@@ -445,7 +448,7 @@ async function synthesizeSpeech(text) {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Ocp-Apim-Subscription-Key': AZURE_CONFIG.key,
+        'Ocp-Apim-Subscription-Key': config.key,
         'Content-Type': 'application/ssml+xml',
         'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3'
       },

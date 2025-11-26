@@ -13,10 +13,6 @@
   <script crossorigin="anonymous" src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
   <!-- Microsoft Cognitive Services Speech SDK -->
   <script src="https://aka.ms/csspeech/jsbundle"></script>
-  <!-- Configuration -->
-  <script src="config.js"></script>
-  <!-- Local configuration (for development only) -->
-  <script src="config.local.js"></script>
 </head>
 
 <body>
@@ -108,6 +104,11 @@
     </main>
   </div>
 
+  <!-- Configuration (loads before chat.js) -->
+  <script src="config.js"></script>
+  <!-- Local configuration (for development only, loads before chat.js) -->
+  <script src="config.local.js"></script>
+  <!-- Chat Application Script -->
   <script src="chat.js"></script>
 </body>
 
