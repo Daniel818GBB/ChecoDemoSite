@@ -420,6 +420,9 @@ async function synthesizeSpeech(text) {
 
   // Check if API key is configured
   const config = getAzureConfig();
+  console.log('[TTS] Config check - KEY length:', config.key.length, 'REGION:', config.region);
+  console.log('[TTS] window.AZURE_SPEECH_KEY:', window.AZURE_SPEECH_KEY ? 'set (' + window.AZURE_SPEECH_KEY.length + ' chars)' : 'NOT SET');
+  
   if (!config.key) {
     console.warn('Azure Speech API key not configured. Please set AZURE_SPEECH_KEY.');
     ttsDisplay.style.display = 'flex';
@@ -436,6 +439,7 @@ async function synthesizeSpeech(text) {
     ttsText.textContent = 'Generating speech...';
 
     const url = `https://${config.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+    console.log('[TTS] Calling Azure endpoint:', url);
     
     const ssml = `<speak version='1.0' xml:lang='en-US'>
       <voice name='en-US-AriaNeural'>
