@@ -16,6 +16,14 @@ const ttsToggle = document.getElementById('tts-toggle');
 const ttsDisplay = document.getElementById('tts-display');
 const ttsText = document.getElementById('tts-text');
 const ttsStop = document.getElementById('tts-stop');
+const settingsToggle = document.getElementById('settings-toggle');
+const settingsModal = document.getElementById('settings-modal');
+const settingsClose = document.getElementById('settings-close');
+const settingsSave = document.getElementById('settings-save');
+const settingsReset = document.getElementById('settings-reset');
+const azureKeyInput = document.getElementById('azure-key-input');
+const azureRegionInput = document.getElementById('azure-region-input');
+const showKeyCheckbox = document.getElementById('show-key-checkbox');
 
 // Current state
 let currentScenario = null;
@@ -37,6 +45,73 @@ const getAzureConfig = () => {
 // Sidebar toggle functionality
 menuToggle.addEventListener('click', () => {
   sidebar.classList.toggle('collapsed');
+});
+
+// Settings Modal Functions
+function loadSettingsModal() {
+  const savedKey = localStorage.getItem('AZURE_SPEECH_KEY') || '';
+  const savedRegion = localStorage.getItem('AZURE_SPEECH_REGION') || 'eastus';
+  azureKeyInput.value = savedKey;
+  azureRegionInput.value = savedRegion;
+}
+
+function openSettingsModal() {
+  loadSettingsModal();
+  settingsModal.style.display = 'flex';
+  azureKeyInput.focus();
+}
+
+function closeSettingsModal() {
+  settingsModal.style.display = 'none';
+}
+
+// Settings Modal Event Listeners
+settingsToggle.addEventListener('click', openSettingsModal);
+settingsClose.addEventListener('click', closeSettingsModal);
+
+settingsSave.addEventListener('click', () => {
+  const key = azureKeyInput.value.trim();
+  const region = azureRegionInput.value.trim() || 'eastus';
+  
+  if (!key) {
+    alert('Please enter an Azure Speech API Key');
+    return;
+  }
+  
+  localStorage.setItem('AZURE_SPEECH_KEY', key);
+  localStorage.setItem('AZURE_SPEECH_REGION', region);
+  
+  // Update window variables
+  window.AZURE_SPEECH_KEY = key;
+  window.AZURE_SPEECH_REGION = region;
+  
+  console.log('[Settings] Azure credentials saved to localStorage');
+  alert('Configuration saved successfully!');
+  closeSettingsModal();
+});
+
+settingsReset.addEventListener('click', () => {
+  if (confirm('Clear all saved Azure credentials?')) {
+    localStorage.removeItem('AZURE_SPEECH_KEY');
+    localStorage.removeItem('AZURE_SPEECH_REGION');
+    azureKeyInput.value = '';
+    azureRegionInput.value = 'eastus';
+    window.AZURE_SPEECH_KEY = '';
+    window.AZURE_SPEECH_REGION = 'eastus';
+    console.log('[Settings] Azure credentials cleared');
+    alert('Credentials cleared');
+  }
+});
+
+showKeyCheckbox.addEventListener('change', () => {
+  azureKeyInput.type = showKeyCheckbox.checked ? 'text' : 'password';
+});
+
+// Close modal when clicking outside
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) {
+    closeSettingsModal();
+  }
 });
 
 // Scenario selection
