@@ -123,6 +123,21 @@ settingsModal.addEventListener('click', (e) => {
   }
 });
 
+// Check if this is first load (no Azure credentials set)
+function checkFirstLoad() {
+  const hasCredentials = localStorage.getItem('AZURE_SPEECH_KEY');
+  if (!hasCredentials) {
+    console.log('[Init] First load detected - showing settings modal');
+    // Show settings modal on first load so user can configure before starting
+    setTimeout(() => {
+      openSettingsModal();
+    }, 500);
+  }
+}
+
+// Run first load check when page loads
+window.addEventListener('load', checkFirstLoad);
+
 // Scenario selection
 scenarioBtns.forEach(btn => {
   btn.addEventListener('click', (e) => {
