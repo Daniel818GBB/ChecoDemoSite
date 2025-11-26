@@ -365,40 +365,24 @@ function stopSpeechRecognition() {
 }
 
 function sendSpeechToChat(text) {
-  // Find the WebChat send button and input field
-  const sendButton = document.querySelector('[aria-label="Send"]') || 
-                     document.querySelector('button[aria-label*="Send"]') ||
-                     document.querySelector('[role="button"][aria-label*="send"]');
-  
-  const inputBox = document.querySelector('input[type="text"]') ||
-                   document.querySelector('[contenteditable="true"]') ||
-                   document.querySelector('.webchat__textbox__input');
-
-  if (inputBox) {
-    // Set the input value
-    if (inputBox.contentEditable === 'true') {
-      inputBox.textContent = text;
-    } else {
-      inputBox.value = text;
-      inputBox.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-
-    // Trigger send button click after a short delay
-    setTimeout(() => {
-      if (sendButton) {
-        sendButton.click();
-      } else {
-        // Try pressing Enter as fallback
-        inputBox.dispatchEvent(new KeyboardEvent('keydown', {
-          key: 'Enter',
-          code: 'Enter',
-          keyCode: 13,
-          which: 13,
-          bubbles: true
-        }));
+  // Use DirectLine API to send message directly to the bot
+  if (window.chatDirectLine && text.trim()) {
+    window.chatDirectLine.postActivity({
+      type: 'message',
+      text: text.trim(),
+      from: { id: 'user', name: 'User' }
+    }).subscribe(
+      (id) => {
+        console.log('Message sent successfully with ID:', id);
+        stopSpeechRecognition();
+      },
+      (error) => {
+        console.error('Error sending message via DirectLine:', error);
+        stopSpeechRecognition();
       }
-    }, 100);
-
+    );
+  } else {
+    console.warn('DirectLine not available or empty text');
     stopSpeechRecognition();
   }
 }
