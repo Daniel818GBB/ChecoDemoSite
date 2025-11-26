@@ -1,4 +1,6 @@
 node_modules/
 /test-results/
 src/config.local.js
-
+.env
+.env.local
+.env.*.local
