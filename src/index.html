@@ -106,8 +106,6 @@
 
   <!-- Configuration (loads before chat.js) -->
   <script src="config.js"></script>
-  <!-- Local configuration (for development only, loads before chat.js) -->
-  <script src="config.local.js" onerror="console.error('[SCRIPT ERROR] Failed to load config.local.js')"></script>
   <!-- Chat Application Script -->
   <script>
     console.log('[DEBUG] Before chat.js load - window.AZURE_SPEECH_KEY:', window.AZURE_SPEECH_KEY ? 'set (' + window.AZURE_SPEECH_KEY.length + ' chars)' : 'NOT SET');
