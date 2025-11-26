@@ -24,7 +24,6 @@ const settingsReset = document.getElementById('settings-reset');
 const azureKeyInput = document.getElementById('azure-key-input');
 const azureRegionInput = document.getElementById('azure-region-input');
 const voiceSelect = document.getElementById('voice-select');
-const showKeyCheckbox = document.getElementById('show-key-checkbox');
 
 // Current state
 let currentScenario = null;
@@ -110,10 +109,6 @@ settingsReset.addEventListener('click', () => {
     console.log('[Settings] Azure credentials cleared');
     alert('Credentials cleared');
   }
-});
-
-showKeyCheckbox.addEventListener('change', () => {
-  azureKeyInput.type = showKeyCheckbox.checked ? 'text' : 'password';
 });
 
 // Close modal when clicking outside
