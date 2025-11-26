@@ -416,6 +416,17 @@ async function synthesizeSpeech(text) {
     return;
   }
 
+  // Check if API key is configured
+  if (!AZURE_CONFIG.key) {
+    console.warn('Azure Speech API key not configured. Please set AZURE_SPEECH_KEY.');
+    ttsDisplay.style.display = 'flex';
+    ttsText.textContent = 'Speech service not configured';
+    setTimeout(() => {
+      ttsDisplay.style.display = 'none';
+    }, 3000);
+    return;
+  }
+
   try {
     isPlayingAudio = true;
     ttsDisplay.style.display = 'flex';
@@ -442,7 +453,9 @@ async function synthesizeSpeech(text) {
     });
 
     if (!response.ok) {
-      throw new Error(`Azure TTS error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Azure TTS API error:', response.status, errorText);
+      throw new Error(`Azure TTS error: ${response.status} - ${response.statusText}`);
     }
 
     const audioBlob = await response.blob();
@@ -451,11 +464,11 @@ async function synthesizeSpeech(text) {
     playAudio(audioUrl, text);
   } catch (error) {
     console.error('Error synthesizing speech:', error);
-    ttsText.textContent = 'Error generating speech';
+    ttsText.textContent = 'Error: ' + (error.message || 'Speech generation failed');
     setTimeout(() => {
       ttsDisplay.style.display = 'none';
       isPlayingAudio = false;
-    }, 2000);
+    }, 3000);
   }
 }
 
