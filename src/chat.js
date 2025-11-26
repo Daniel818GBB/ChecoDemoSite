@@ -1,23 +1,68 @@
-// Chat button logic
-const toggleBtn = document.getElementById('chat-toggle');
-const chatBox = document.getElementById('chat-box');
-const closeBtn = document.getElementById('chat-close');
-const restartBtn = document.getElementById('chat-restart');
+// UI Elements
+const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.querySelector('.sidebar');
+const scenarioBtns = document.querySelectorAll('.scenario-btn[data-scenario]');
+const newChatBtn = document.getElementById('new-chat-btn');
+const clearChatBtn = document.getElementById('clear-chat-btn');
+const startChatBtn = document.getElementById('start-chat');
+const learnMoreBtn = document.getElementById('learn-more');
+const welcomeScreen = document.getElementById('chat-welcome');
+const webchatArea = document.querySelector('.webchat-area');
 
-toggleBtn.addEventListener('click', () => {
-  const isVisible = chatBox.style.display === 'block';
-  chatBox.style.display = isVisible ? 'none' : 'block';
-  toggleBtn.setAttribute('aria-expanded', String(!isVisible));
-  toggleBtn.setAttribute('aria-label', isVisible ? 'Open chat' : 'Close chat');
+// Current state
+let currentScenario = null;
+let pendingScroll = false;
+let isUserTurn = false;
+
+// Sidebar toggle functionality
+menuToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
 });
 
-closeBtn.addEventListener('click', () => {
-  chatBox.style.display = 'none';
-  toggleBtn.setAttribute('aria-expanded', 'false');
-  toggleBtn.setAttribute('aria-label', 'Open chat');
+// Scenario selection
+scenarioBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    scenarioBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentScenario = btn.dataset.scenario;
+    showChat();
+  });
 });
 
-restartBtn.addEventListener('click', () => {
+// New chat functionality
+newChatBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  resetChat();
+});
+
+// Clear history
+clearChatBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  clearChatHistory();
+});
+
+// Welcome screen buttons
+startChatBtn.addEventListener('click', () => {
+  showChat();
+});
+
+learnMoreBtn.addEventListener('click', () => {
+  alert('AI Assistant provides intelligent conversations with scenario-based interactions. Choose a scenario from the left sidebar to get started!');
+});
+
+// Show chat function
+function showChat() {
+  welcomeScreen.classList.add('hidden');
+  webchatArea.classList.add('active');
+  if (!window.chatInitialized) {
+    startWebChat();
+    window.chatInitialized = true;
+  }
+}
+
+// Reset chat
+function resetChat() {
   if (window.chatObserver) {
     window.chatObserver.disconnect();
     window.chatObserver = null;
@@ -33,12 +78,21 @@ restartBtn.addEventListener('click', () => {
   const webchatElement = document.getElementById('webchat');
   if (webchatElement) {
     webchatElement.innerHTML = '';
-    startWebChat();
+    window.chatInitialized = false;
   }
-});
+  welcomeScreen.classList.remove('hidden');
+  webchatArea.classList.remove('active');
+}
 
-let pendingScroll = false;
-let isUserTurn = false;
+// Clear chat history
+function clearChatHistory() {
+  const webchatElement = document.getElementById('webchat');
+  if (webchatElement) {
+    webchatElement.innerHTML = '';
+  }
+  pendingScroll = false;
+  isUserTurn = false;
+}
 
 function startWebChat() {
   (async function () {
@@ -51,9 +105,9 @@ function startWebChat() {
       fontFamily: "'Montserrat', Arial, sans-serif",
       sendBoxBackground: "#fff",
       sendBoxTextColor: "#333",
-      sendBoxButtonColor: "#4285f4",
-      accent: "#4285f4",
-      botAvatarInitials: "MC",
+      sendBoxButtonColor: "#667eea",
+      accent: "#667eea",
+      botAvatarInitials: "AI",
       userAvatarInitials: "You",
       sendBoxHeight: 48,
       sendBoxBorderTop: "1px solid #e0e0e0",
@@ -64,73 +118,78 @@ function startWebChat() {
     const locale = document.documentElement.lang || 'en';
     const apiVersion = tokenEndpointURL.searchParams.get('api-version');
 
-    const [directLineURL, token] = await Promise.all([
-      fetch(new URL(`/powervirtualagents/regionalchannelsettings?api-version=${apiVersion}`, tokenEndpointURL))
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to retrieve regional channel settings.');
-          }
-          return response.json();
-        })
-        .then(({ channelUrlsById: { directline } }) => directline),
-      fetch(tokenEndpointURL)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to retrieve Direct Line token.');
-          }
-          return response.json();
-        })
-        .then(({ token }) => token)
-    ]);
+    try {
+      const [directLineURL, token] = await Promise.all([
+        fetch(new URL(`/powervirtualagents/regionalchannelsettings?api-version=${apiVersion}`, tokenEndpointURL))
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to retrieve regional channel settings.');
+            }
+            return response.json();
+          })
+          .then(({ channelUrlsById: { directline } }) => directline),
+        fetch(tokenEndpointURL)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to retrieve Direct Line token.');
+            }
+            return response.json();
+          })
+          .then(({ token }) => token)
+      ]);
 
-    const directLine = window.WebChat.createDirectLine({ domain: new URL('v3/directline', directLineURL), token });
-    window.chatDirectLine = directLine;
+      const directLine = window.WebChat.createDirectLine({ domain: new URL('v3/directline', directLineURL), token });
+      window.chatDirectLine = directLine;
 
-    const store = window.WebChat.createStore(
-      {},
-      ({ dispatch }) => next => action => {
-        const result = next(action);
-       
-        if (action.type === 'WEB_CHAT/SEND_MESSAGE') {
-          isUserTurn = true;
-        } else if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY') {
-          const activity = action.payload.activity;
-          if (activity.from && activity.from.role === 'bot' && activity.type === 'message' && isUserTurn) {
-            pendingScroll = true;
-            isUserTurn = false;
+      const store = window.WebChat.createStore(
+        {},
+        ({ dispatch }) => next => action => {
+          const result = next(action);
+         
+          if (action.type === 'WEB_CHAT/SEND_MESSAGE') {
+            isUserTurn = true;
+          } else if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY') {
+            const activity = action.payload.activity;
+            if (activity.from && activity.from.role === 'bot' && activity.type === 'message' && isUserTurn) {
+              pendingScroll = true;
+              isUserTurn = false;
+            }
+          }
+         
+          return result;
+        }
+      );
+
+      const subscription = directLine.connectionStatus$.subscribe({
+        next(value) {
+          if (value === 2) {
+            directLine
+              .postActivity({
+                localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                locale,
+                name: 'startConversation',
+                type: 'event'
+              })
+              .subscribe();
+            subscription.unsubscribe();
           }
         }
-       
-        return result;
-      }
-    );
+      });
 
-    const subscription = directLine.connectionStatus$.subscribe({
-      next(value) {
-        if (value === 2) {
-          directLine
-            .postActivity({
-              localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              locale,
-              name: 'startConversation',
-              type: 'event'
-            })
-            .subscribe();
-          subscription.unsubscribe();
-        }
-      }
-    });
+      window.WebChat.renderWebChat({
+        directLine,
+        locale,
+        styleOptions,
+        store
+      }, document.getElementById('webchat'));
 
-    window.WebChat.renderWebChat({
-      directLine,
-      locale,
-      styleOptions,
-      store
-    }, document.getElementById('webchat'));
-
-    setTimeout(() => {
-      setupScrollingObserver();
-    }, 1000);
+      setTimeout(() => {
+        setupScrollingObserver();
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to initialize WebChat:', error);
+      document.getElementById('webchat').innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Unable to connect to chat service. Please try again later.</div>';
+    }
   })();
 }
 
@@ -194,8 +253,3 @@ function performOptimizedScroll() {
    
   transcriptElement.scrollTop = scrollPosition;
 }
-
-// Initialize the chat when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-  startWebChat();
-});
