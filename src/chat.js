@@ -23,6 +23,7 @@ const settingsSave = document.getElementById('settings-save');
 const settingsReset = document.getElementById('settings-reset');
 const azureKeyInput = document.getElementById('azure-key-input');
 const azureRegionInput = document.getElementById('azure-region-input');
+const voiceSelect = document.getElementById('voice-select');
 const showKeyCheckbox = document.getElementById('show-key-checkbox');
 
 // Current state
@@ -51,8 +52,10 @@ menuToggle.addEventListener('click', () => {
 function loadSettingsModal() {
   const savedKey = localStorage.getItem('AZURE_SPEECH_KEY') || '';
   const savedRegion = localStorage.getItem('AZURE_SPEECH_REGION') || 'eastus';
+  const savedVoice = localStorage.getItem('AZURE_SPEECH_VOICE') || 'en-US-AriaNeural';
   azureKeyInput.value = savedKey;
   azureRegionInput.value = savedRegion;
+  voiceSelect.value = savedVoice;
 }
 
 function openSettingsModal() {
@@ -72,6 +75,7 @@ settingsClose.addEventListener('click', closeSettingsModal);
 settingsSave.addEventListener('click', () => {
   const key = azureKeyInput.value.trim();
   const region = azureRegionInput.value.trim() || 'eastus';
+  const voice = voiceSelect.value || 'en-US-AriaNeural';
   
   if (!key) {
     alert('Please enter an Azure Speech API Key');
@@ -80,12 +84,14 @@ settingsSave.addEventListener('click', () => {
   
   localStorage.setItem('AZURE_SPEECH_KEY', key);
   localStorage.setItem('AZURE_SPEECH_REGION', region);
+  localStorage.setItem('AZURE_SPEECH_VOICE', voice);
   
   // Update window variables
   window.AZURE_SPEECH_KEY = key;
   window.AZURE_SPEECH_REGION = region;
+  window.AZURE_SPEECH_VOICE = voice;
   
-  console.log('[Settings] Azure credentials saved to localStorage');
+  console.log('[Settings] Azure credentials and voice saved to localStorage');
   alert('Configuration saved successfully!');
   closeSettingsModal();
 });
@@ -94,10 +100,13 @@ settingsReset.addEventListener('click', () => {
   if (confirm('Clear all saved Azure credentials?')) {
     localStorage.removeItem('AZURE_SPEECH_KEY');
     localStorage.removeItem('AZURE_SPEECH_REGION');
+    localStorage.removeItem('AZURE_SPEECH_VOICE');
     azureKeyInput.value = '';
     azureRegionInput.value = 'eastus';
+    voiceSelect.value = 'en-US-AriaNeural';
     window.AZURE_SPEECH_KEY = '';
     window.AZURE_SPEECH_REGION = 'eastus';
+    window.AZURE_SPEECH_VOICE = 'en-US-AriaNeural';
     console.log('[Settings] Azure credentials cleared');
     alert('Credentials cleared');
   }
@@ -495,7 +504,9 @@ async function synthesizeSpeech(text) {
 
   // Check if API key is configured
   const config = getAzureConfig();
-  console.log('[TTS] Config check - KEY length:', config.key.length, 'REGION:', config.region);
+  const voice = window.AZURE_SPEECH_VOICE || localStorage.getItem('AZURE_SPEECH_VOICE') || 'en-US-AriaNeural';
+  
+  console.log('[TTS] Config check - KEY length:', config.key.length, 'REGION:', config.region, 'VOICE:', voice);
   console.log('[TTS] window.AZURE_SPEECH_KEY:', window.AZURE_SPEECH_KEY ? 'set (' + window.AZURE_SPEECH_KEY.length + ' chars)' : 'NOT SET');
   
   if (!config.key) {
@@ -514,10 +525,10 @@ async function synthesizeSpeech(text) {
     ttsText.textContent = 'Generating speech...';
 
     const url = `https://${config.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-    console.log('[TTS] Calling Azure endpoint:', url);
+    console.log('[TTS] Calling Azure endpoint:', url, 'with voice:', voice);
     
     const ssml = `<speak version='1.0' xml:lang='en-US'>
-      <voice name='en-US-AriaNeural'>
+      <voice name='${voice}'>
         <prosody rate='1.0' pitch='0%'>
           ${escapeXml(text)}
         </prosody>
