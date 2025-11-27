@@ -42,6 +42,7 @@
           <ul class="scenarios-list">
             <li><button class="scenario-btn" id="new-chat-btn"><i class="fas fa-plus"></i> <span>New Chat</span></button></li>
             <li><button class="scenario-btn" id="clear-chat-btn"><i class="fas fa-trash"></i> <span>Clear History</span></button></li>
+            <li><button class="scenario-btn" id="notes-btn"><i class="fas fa-sticky-note"></i> <span>Use Cases</span></button></li>
           </ul>
         </div>
       </nav>
@@ -161,6 +162,48 @@
       <div class="modal-footer">
         <button class="btn-secondary" id="settings-reset">Clear Saved</button>
         <button class="btn-primary" id="settings-save">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Use Cases Drawer -->
+  <div id="use-cases-drawer" class="drawer" style="display: none;">
+    <div class="drawer-header">
+      <h2>Telco Demo Use Cases</h2>
+      <button class="drawer-close" id="drawer-close">&times;</button>
+    </div>
+    <div class="drawer-content">
+      <div class="use-case-item">
+        <h3>🎯 Customer Service Optimization</h3>
+        <p>AI-powered chatbot handling 80% of customer inquiries for billing, plans, and technical support, reducing support costs by 40%.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>📊 Network Performance Analysis</h3>
+        <p>Predictive analytics identifying network congestion patterns 48 hours in advance, enabling proactive infrastructure optimization.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>💰 Revenue Optimization</h3>
+        <p>Dynamic pricing engine using ML to adjust plans based on demand, network capacity, and customer behavior - 15% revenue increase.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>🔐 Fraud Detection</h3>
+        <p>Real-time anomaly detection preventing SIM swap fraud and unauthorized international roaming, saving $2M annually.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>📱 5G Experience Management</h3>
+        <p>AI monitors 5G network quality across cities, automatically compensating users with data credits for service degradation.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>🌐 IoT Device Management</h3>
+        <p>Connected platform managing millions of IoT devices with predictive maintenance alerts, reducing downtime by 65%.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>📞 Voice Analytics</h3>
+        <p>Sentiment analysis on customer calls identifying dissatisfaction early, enabling real-time intervention and service recovery.</p>
+      </div>
+      <div class="use-case-item">
+        <h3>🚀 Hyper-Personalization</h3>
+        <p>Next-gen recommendations engine suggesting packages based on usage patterns, increasing upsell by 35%.</p>
       </div>
     </div>
   </div>

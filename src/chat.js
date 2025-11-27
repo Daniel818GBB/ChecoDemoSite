@@ -4,6 +4,7 @@ const sidebar = document.querySelector('.sidebar');
 const scenarioBtns = document.querySelectorAll('.scenario-btn[data-scenario]');
 const newChatBtn = document.getElementById('new-chat-btn');
 const clearChatBtn = document.getElementById('clear-chat-btn');
+const notesBtn = document.getElementById('notes-btn');
 const startChatBtn = document.getElementById('start-chat');
 const welcomeScreen = document.getElementById('chat-welcome');
 const webchatArea = document.querySelector('.webchat-area');
@@ -23,6 +24,8 @@ const settingsReset = document.getElementById('settings-reset');
 const azureKeyInput = document.getElementById('azure-key-input');
 const azureRegionInput = document.getElementById('azure-region-input');
 const voiceSelect = document.getElementById('voice-select');
+const useCasesDrawer = document.getElementById('use-cases-drawer');
+const drawerClose = document.getElementById('drawer-close');
 
 // Current state
 let currentScenario = null;
@@ -41,9 +44,38 @@ const getAzureConfig = () => {
   };
 };
 
+// Use Cases Drawer Functions
+function openUseCasesDrawer() {
+  useCasesDrawer.style.display = 'flex';
+}
+
+function closeUseCasesDrawer() {
+  useCasesDrawer.style.display = 'none';
+}
+
 // Sidebar toggle functionality
 menuToggle.addEventListener('click', () => {
   sidebar.classList.toggle('collapsed');
+});
+
+// Use Cases drawer handlers
+notesBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  openUseCasesDrawer();
+});
+
+drawerClose.addEventListener('click', () => {
+  closeUseCasesDrawer();
+});
+
+// Close drawer when clicking outside (on sidebar)
+document.addEventListener('click', (e) => {
+  if (useCasesDrawer.style.display === 'flex' && 
+      !useCasesDrawer.contains(e.target) && 
+      e.target !== notesBtn && 
+      !notesBtn.contains(e.target)) {
+    closeUseCasesDrawer();
+  }
 });
 
 // Settings Modal Functions
