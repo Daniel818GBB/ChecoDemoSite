@@ -5,7 +5,6 @@ const scenarioBtns = document.querySelectorAll('.scenario-btn[data-scenario]');
 const newChatBtn = document.getElementById('new-chat-btn');
 const clearChatBtn = document.getElementById('clear-chat-btn');
 const startChatBtn = document.getElementById('start-chat');
-const learnMoreBtn = document.getElementById('learn-more');
 const welcomeScreen = document.getElementById('chat-welcome');
 const webchatArea = document.querySelector('.webchat-area');
 const micToggle = document.getElementById('mic-toggle');
@@ -159,10 +158,6 @@ clearChatBtn.addEventListener('click', (e) => {
 // Welcome screen buttons
 startChatBtn.addEventListener('click', () => {
   showChat();
-});
-
-learnMoreBtn.addEventListener('click', () => {
-  alert('AI Assistant provides intelligent conversations with scenario-based interactions. Choose a scenario from the left sidebar to get started!');
 });
 
 // Microphone and Speech Recognition
